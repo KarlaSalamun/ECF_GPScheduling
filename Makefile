@@ -7,7 +7,7 @@ OBJS = TaskEvalOp.o \
        main.o \
        Task.o
 
-BINFILE = sched
+BINFILE = sched.elf
 
 .PHONY = all clean
 
