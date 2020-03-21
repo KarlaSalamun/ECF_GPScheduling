@@ -10,7 +10,7 @@
 class PosNode : public Tree::Primitives::Primitive {
     public:
         PosNode() {
-            nArguments_ = 2;
+            nArguments_ = 1;
             name_ = "Pos";
         }
 

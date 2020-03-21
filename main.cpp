@@ -16,6 +16,9 @@
 #include "Nodes/SubNode.h"
 #include "Nodes/WNode.h"
 
+void draw_tree( IndividualP ind );
+
+
 int main(int argc, char **argv)
 {
 	StateP state (new State);
@@ -69,13 +72,11 @@ int main(int argc, char **argv)
 	if(!state->initialize(argc, argv))
 		return 1;
 	state->run();
-
-	// after the evolution: show best evolved ant's behaviour on learning trails
-	/*
+	
 	std::vector<IndividualP> hof = state->getHoF()->getBest();
 	IndividualP ind = hof[0];
 	std::cout << ind->toString();
-	std::cout << "\nBest ant's performance on learning traIndividualPil(s):" << std::endl;
+	//std::cout << "\nBest ant's performance on learning traIndividualPil(s):" << std::endl;
 
 	// optional: show movements step by step (interactive)
 	//AntEvalOp::step = 1;
@@ -83,24 +84,33 @@ int main(int argc, char **argv)
 	state->getEvalOp()->evaluate(ind);
 
 	// also, simulate best evolved ant on a (different) test trail!
-	std::cout << "\nBest ant's performance on test trail(s):" << std::endl;
-	AntEvalOp* evalOp = new AntEvalOp;
+	// std::cout << "\nBest ant's performance on test trail(s):" << std::endl;
+	// AntEvalOp* evalOp = new AntEvalOp;
 
 	// substitute test trails for learning trails (defined in config file):
-	state->getRegistry()->modifyEntry("learning_trails", state->getRegistry()->getEntry("test_trails"));
-	evalOp->initialize(state);
-	evalOp->evaluate(ind);
+	// state->getRegistry()->modifyEntry("learning_trails", state->getRegistry()->getEntry("test_trails"));
+	// evalOp->initialize(state);
+	// evalOp->evaluate(ind);
 
 
 	// optional: write best individual to 'best.txt'
-//	ofstream best("./best.txt");
-//	best << ind->toString();
-//	best.close();
+	ofstream best("./best.txt");
+	best << ind->toString();
+	best.close();
 
     // optional: read individual from 'best.txt' (for subsequent simulation)
-//	XMLNode xInd = XMLNode::parseFile("./best.txt", "Individual");
-//	IndividualP ind = (IndividualP) new Individual(state);
-//	ind->read(xInd); 
-*/
+	XMLNode xInd = XMLNode::parseFile("./best.txt", "Individual");
+	IndividualP ind1 = (IndividualP) new Individual(state);
+	ind1->read(xInd); 
+
+	draw_tree( ind1 );
+
 	return 0;
+}
+
+void draw_tree( IndividualP ind )
+{
+	ofstream test("./test.txt");
+	test << ind->toString();
+	test.close();
 }
