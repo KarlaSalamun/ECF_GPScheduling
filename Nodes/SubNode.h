@@ -23,6 +23,7 @@ class SubNode : public Tree::Primitives::Primitive {
              
             getNextArgument(ctx_, tree);
             ctx_->task->priority -= tmp_priority;
+            // assert(ctx_->task->priority > -1000 && ctx_->task->priority < 1000);
         }
 };
 

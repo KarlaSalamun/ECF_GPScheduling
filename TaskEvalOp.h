@@ -4,6 +4,9 @@
 #include <random>
 
 #include "Task.h"
+#include "Task_p.h"
+#include "PeriodicSimulator.h"
+
 
 struct task_ctx {
 	Task *task;
@@ -18,8 +21,10 @@ protected:
 	StateP state_;
 
 public:
-	TaskEvalOp( int taskNo ) : EvaluateOp() {
+	TaskEvalOp( int taskNo, bool use_predef_tasks, bool periodic ) : EvaluateOp() {
 		this->taskNo = taskNo;
+		this->use_predef_tasks = use_predef_tasks;
+		this->periodic = periodic;
 	}
 	FitnessP evaluate(IndividualP individual);
 	bool initialize(StateP);
@@ -41,6 +46,8 @@ public:
 
 private:
 	int taskNo;
+	bool use_predef_tasks;
+	bool periodic;
 	double dd_range = 0.6;
     double dd_tightness = 0.6;
     std::vector<Task *> test_set;

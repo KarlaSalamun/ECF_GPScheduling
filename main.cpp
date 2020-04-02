@@ -16,15 +16,62 @@
 #include "Nodes/SubNode.h"
 #include "Nodes/WNode.h"
 
-void draw_tree( IndividualP ind );
-
+StateP initialize_state();
 
 int main(int argc, char **argv)
 {
+
+	IndividualP ind;
+	FILE *fd = fopen( "ecf_results.csv", "w+" );
+	
+	
+	for( int i=0; i<1; i++ ) {
+		StateP state = initialize_state();
+		if(!state->initialize(argc, argv))
+			return 1;
+	
+		state->run();
+	
+		std::vector<IndividualP> hof = state->getHoF()->getBest();
+		ind = hof[0];
+
+		FitnessP fitness (new FitnessMin);
+		fitness = state->getEvalOp()->evaluate(ind);
+
+		fprintf( fd, "%d,%lf\n", i+1, fitness->getValue() );
+	}
+
+	fclose(fd);
+
+	// also, simulate best evolved ant on a (different) test trail!
+	// std::cout << "\nBest ant's performance on test trail(s):" << std::endl;
+	// AntEvalOp* evalOp = new AntEvalOp;
+
+	// substitute test trails for learning trails (defined in config file):
+	// state->getRegistry()->modifyEntry("learning_trails", state->getRegistry()->getEntry("test_trails"));
+	// evalOp->initialize(state);
+	// evalOp->evaluate(ind);
+
+
+	// optional: write best individual to 'best.txt'
+	ofstream best("./best.txt");
+	best << ind->toString();
+	best.close();
+
+    // optional: read individual from 'best.txt' (for subsequent simulation)
+	// XMLNode xInd = XMLNode::parseFile("./best.txt", "Individual");
+	// IndividualP ind1 = (IndividualP) new Individual(state);
+	// ind1->read(xInd); 
+
+
+	return 0;
+}
+
+StateP initialize_state( void ) {
 	StateP state (new State);
 
 	// crate evaluation operator
-	state->setEvalOp(new TaskEvalOp( 12 ) );
+	state->setEvalOp(new TaskEvalOp( 10, true, true ) );
 	
 	// create tree genotype
 	TreeP tree (new Tree::Tree);
@@ -69,48 +116,6 @@ int main(int argc, char **argv)
 	// register genotype with our primitives
 	state->addGenotype(tree);
 	// initialize and start evaluation
-	if(!state->initialize(argc, argv))
-		return 1;
-	state->run();
-	
-	std::vector<IndividualP> hof = state->getHoF()->getBest();
-	IndividualP ind = hof[0];
-	std::cout << ind->toString();
-	//std::cout << "\nBest ant's performance on learning traIndividualPil(s):" << std::endl;
 
-	// optional: show movements step by step (interactive)
-	//AntEvalOp::step = 1;
-
-	state->getEvalOp()->evaluate(ind);
-
-	// also, simulate best evolved ant on a (different) test trail!
-	// std::cout << "\nBest ant's performance on test trail(s):" << std::endl;
-	// AntEvalOp* evalOp = new AntEvalOp;
-
-	// substitute test trails for learning trails (defined in config file):
-	// state->getRegistry()->modifyEntry("learning_trails", state->getRegistry()->getEntry("test_trails"));
-	// evalOp->initialize(state);
-	// evalOp->evaluate(ind);
-
-
-	// optional: write best individual to 'best.txt'
-	ofstream best("./best.txt");
-	best << ind->toString();
-	best.close();
-
-    // optional: read individual from 'best.txt' (for subsequent simulation)
-	XMLNode xInd = XMLNode::parseFile("./best.txt", "Individual");
-	IndividualP ind1 = (IndividualP) new Individual(state);
-	ind1->read(xInd); 
-
-	draw_tree( ind1 );
-
-	return 0;
-}
-
-void draw_tree( IndividualP ind )
-{
-	ofstream test("./test.txt");
-	test << ind->toString();
-	test.close();
+	return state;
 }

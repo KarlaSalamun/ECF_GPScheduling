@@ -19,6 +19,7 @@ class PosNode : public Tree::Primitives::Primitive {
 
             getNextArgument(ctx_, tree);
             ctx_->task->priority = std::max( ctx_->task->priority, 0. );
+            // assert(ctx_->task->priority > -1000 && ctx_->task->priority < 10000);
         }
 };
 

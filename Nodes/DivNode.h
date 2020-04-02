@@ -22,7 +22,9 @@ class DivNode : public Tree::Primitives::Primitive {
             tmp_priority = ctx_->task->priority;
              
             getNextArgument(ctx_, tree);
+            // printf("%lf / %lf\n", ctx_->task->priority, tmp_priority);
             ctx_->task->priority /= tmp_priority;
+            // assert(ctx_->task->priority > -1000 && ctx_->task->priority < 1000);
         }
 };
 

@@ -8,7 +8,7 @@
 
 class Task {
     public:
-        int duration;
+        double duration;
         double due_date;
         double weight;
         double priority;
