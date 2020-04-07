@@ -4,15 +4,7 @@
 #include <random>
 
 #include "Task.h"
-#include "Task_p.h"
-#include "PeriodicSimulator.h"
-
-
-struct task_ctx {
-	Task *task;
-	std::vector<Task *> pending;
-	std::vector<Task *> processed;
-};
+#include "Simulator.h"
 
 class TaskEvalOp : public EvaluateOp
 {

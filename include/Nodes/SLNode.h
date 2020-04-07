@@ -18,7 +18,7 @@ class SLNode : public Tree::Primitives::Primitive {
             name_ = "SL";
         }
 
-        void execute(void* evalOp, Tree::Tree& tree) {
+        void execute(void* evalOp, Tree::Tree& ) {
             // get pointer to simulator from the context
             TaskEvalOp* task = (TaskEvalOp*) state_->getContext()->environment;
             task->SLNode( evalOp );

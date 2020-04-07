@@ -14,16 +14,16 @@ class MulNode : public Tree::Primitives::Primitive {
             name_ = "Mul";
         }
 
-        void execute(void* evalOp, Tree::Tree& tree) {
+        void execute(void* evalOp, Tree::Tree& tree ) {
             struct task_ctx *ctx_ = reinterpret_cast<struct task_ctx *>(evalOp);
             double tmp_priority;
 
             getNextArgument(ctx_, tree);
-            tmp_priority = ctx_->task->priority;
+            tmp_priority = ctx_->task->get_priority();
              
             getNextArgument(ctx_, tree);
             // printf("%lf * %lf\n", ctx_->task->priority, tmp_priority);
-            ctx_->task->priority *= tmp_priority;
+            ctx_->task->set_priority( ctx_->task->get_priority() * tmp_priority );
             // assert(ctx_->task->priority >= 0 && ctx_->task->priority < 10000);
         }
     };

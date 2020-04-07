@@ -22,8 +22,8 @@ int main(int argc, char **argv)
 {
 
 	IndividualP ind;
-	FILE *fd = fopen( "ecf_results.csv", "w+" );
-	
+	// FILE *fd = fopen( "../../test_outputs/ecf_results.csv", "w+" );
+	assert(fd);
 	
 	for( int i=0; i<1; i++ ) {
 		StateP state = initialize_state();
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 		FitnessP fitness (new FitnessMin);
 		fitness = state->getEvalOp()->evaluate(ind);
 
-		fprintf( fd, "%d,%lf\n", i+1, fitness->getValue() );
+		// fprintf( fd, "%d,%lf\n", i+1, fitness->getValue() );
 	}
 
 	fclose(fd);
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
 
 	// optional: write best individual to 'best.txt'
-	ofstream best("./best.txt");
+	ofstream best("../../test_outputs/best.txt");
 	best << ind->toString();
 	best.close();
 
