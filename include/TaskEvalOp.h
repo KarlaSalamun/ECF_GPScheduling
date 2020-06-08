@@ -8,15 +8,16 @@
 
 class TaskEvalOp : public EvaluateOp
 {
-	//friend ostream& operator<<(ostream& os, AntEvalOp& ant);
 protected:
 	StateP state_;
 
 public:
-	TaskEvalOp( int taskNo, bool use_predef_tasks, bool periodic ) : EvaluateOp() {
+	TaskEvalOp( int taskNo, bool use_predef_tasks, bool periodic, std::string filename ) : 
+	EvaluateOp() {
 		this->taskNo = taskNo;
 		this->use_predef_tasks = use_predef_tasks;
 		this->periodic = periodic;
+		this->filename = filename;
 	}
 	FitnessP evaluate(IndividualP individual);
 	bool initialize(StateP);
@@ -36,13 +37,21 @@ public:
     void SubNode( void *ctx );
     void WNode( void *ctx );
 
+    void set_filename( std::string filename ) {
+    	this->filename = filename;
+    }
+
 private:
+    std::vector<Task *> test_tasks;
+    std::vector<Task *> pending_tasks;
+    std::vector<Task *> processed_tasks;
 	int taskNo;
 	bool use_predef_tasks;
 	bool periodic;
 	double dd_range = 0.6;
     double dd_tightness = 0.6;
     std::vector<Task *> test_set;
+    std::string filename;
 };
 
 #endif

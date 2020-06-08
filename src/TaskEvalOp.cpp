@@ -42,7 +42,7 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
     double abs_time = 0;
 
     Scheduler *sched = new Scheduler();
-    UunifastCreator *tc = new UunifastCreator( taskNo, "./../../test_inputs/task_set.txt", 10, 1, 1 );
+    UunifastCreator *tc = new UunifastCreator( taskNo, filename, true, 10, 1, 1, 1 );
 
     std::copy( test_set.begin(), test_set.end(), std::back_inserter( tctx.pending ) );
 
@@ -51,13 +51,36 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
     FitnessP fitness (new FitnessMin);
 
     if( periodic ) {
-        Simulator<Tree::Tree *> *simulator = new Simulator<Tree::Tree *>( 0.1, 1000, tc, sched, true );
-        simulator->load();
+        tc->load_tasks( test_tasks );
+        tc->compute_hyperperiod( test_tasks );
+
+        Simulator<Tree::Tree*> *simulator = new Simulator<Tree::Tree*>( 1, 10, tc, sched, true, false );
         simulator->set_heuristic( tree );
 
-        simulator->run();
+        std::vector<double> skip;
 
-        fitness->setValue( simulator->get_total_tardiness() );
+        std::vector<double> utils = { 0.90, 1, 1.1, 1.2, 1.3, 1.4 };
+
+        for( size_t i = 0; i<10; i++) {
+            for( size_t j=0; j<utils.size(); j++ ) {
+                tc->set_overload( utils[j] );
+                tc->set_task_number( 6 );
+                tc->create_test_set( test_tasks );
+                tc->compute_hyperperiod( test_tasks );
+                simulator->set_pending( test_tasks );
+                simulator->set_finish_time( tc->get_hyperperiod() );
+                simulator->run();
+                skip.push_back( simulator->compute_skip_fitness() );
+            }
+        }
+
+        double tmp_sum = 0;
+        for( auto & element : skip ) {
+            tmp_sum += element;
+        }
+        tmp_sum /= skip.size();
+
+        fitness->setValue( tmp_sum );
     }
 
     else {
@@ -75,14 +98,13 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
 
             abs_time+=tctx.pending[0]->get_duration();
 
-            tctx.ready.push_back( tctx.pending[0] );
+            tctx.processed.push_back( tctx.pending[0] );
             tctx.pending.erase( tctx.pending.begin() );
         }
         fitness->setValue(twt);
     }
 	return fitness;
 }
-
 
 void TaskEvalOp::ddNode( void *ctx )
 {
@@ -132,7 +154,7 @@ void TaskEvalOp::SDNode( void *ctx )
 	    sum+=element->get_abs_due_date();
 	}
 
-	for( auto & element : ctx_->ready ) {
+	for( auto & element : ctx_->processed ) {
 	    sum+=element->get_abs_due_date();
 	}
 	ctx_->task->set_priority( sum );
