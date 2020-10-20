@@ -25,11 +25,9 @@ int main(int argc, char **argv)
 {
 
 	IndividualP ind;
-	// FILE *fd = fopen( "../../test_outputs/ecf_results.csv", "w+" );
-	// assert(fd);
 	
 	StateP state = initialize_state();
-	if(!state->initialize(argc, argv))
+	if(!state->initialize(2, argv))
 		return 1;
 
 	state->run();
@@ -39,50 +37,16 @@ int main(int argc, char **argv)
 
 	FitnessP fitness (new FitnessMin);
 	fitness = state->getEvalOp()->evaluate(ind);
-
-		// fprintf( fd, "%d,%lf\n", i+1, fitness->getValue() );
 	
 	std::vector<double> utils;
 	std::vector<double> results;
 
-	TaskEvalOp *eval = new TaskEvalOp( 4, true, true, "../../teat_inputs/100.txt" );
-
-	// for( int overload = 90; overload <= 160; overload = overload + 5 ) {
- //        std::string tmp = "../../test_inputs/" + std::to_string( overload ) + ".txt";
- //        // StateP state = initialize_state( tmp );
- //        eval->set_filename( tmp );
- //        fitness = eval->evaluate(ind);
-
- //        printf( "qos: %lf\n", fitness->getValue());
- //        utils.push_back( overload / 100. );
- //        results.push_back( fitness->getValue() );
- //    }
-
- //    generate_csv( results, utils, "ecf.csv" );
-
-	// fclose(fd);
-
-	// also, simulate best evolved ant on a (different) test trail!
-	// std::cout << "\nBest ant's performance on test trail(s):" << std::endl;
-	// AntEvalOp* evalOp = new AntEvalOp;
-
-	// substitute test trails for learning trails (defined in config file):
-	// state->getRegistry()->modifyEntry("learning_trails", state->getRegistry()->getEntry("test_trails"));
-	// evalOp->initialize(state);
-	// evalOp->evaluate(ind);
-
-
-	// optional: write best individual to 'best.txt'
+	TaskEvalOp *eval = new TaskEvalOp( 4, true, true, "../../test_inputs/100.txt" );
 	ofstream best("../../test_outputs/best.txt");
 	best << ind->toString();
 	best.close();
 
 	test_utils_qos( (Tree::Tree*) ind->getGenotype().get() );
-
-    // optional: read individual from 'best.txt' (for subsequent simulation)
-	// XMLNode xInd = XMLNode::parseFile("./best.txt", "Individual");
-	// IndividualP ind1 = (IndividualP) new Individual(state);
-	// ind1->read(xInd); 
 
 
 	return 0;
@@ -91,13 +55,10 @@ int main(int argc, char **argv)
 StateP initialize_state() {
 	StateP state (new State);
 
-	// crate evaluation operator
 	state->setEvalOp(new TaskEvalOp( 4, true, true, "../../test_inputs/120.txt" ) );
 	
-	// create tree genotype
 	TreeP tree (new Tree::Tree);
 	
-	// create new functions and add them to function set 
 	Tree::PrimitiveP add (new AddNode);
 	add->setName( "add" );
 	tree->addFunction(add);
@@ -134,9 +95,7 @@ StateP initialize_state() {
 	Tree::PrimitiveP w (new WNode);
 	w->setName( "w" );
 	tree->addTerminal(w);
-	// register genotype with our primitives
 	state->addGenotype(tree);
-	// initialize and start evaluation
 
 	return state;
 }
@@ -173,7 +132,6 @@ void test_utils_qos( Tree::Tree * heuristic )
     for( size_t i=0; i<utils.size(); i++ ) {
         taskc->set_overload(utils[i]);
         taskc->set_task_number(6);
-//        double sum = 0;
         for (size_t j = 0; j < 100; j++) {
             do {
                 taskc->create_test_set(test_tasks);

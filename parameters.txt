@@ -1,8 +1,11 @@
 <ECF>
+	<Algorithm>
+		<NSGA2/>
+	</Algorithm>
 	<Genotype>
 		<Tree>
 			<Entry key="maxdepth">4</Entry>
-			<Entry key="mindepth">1</Entry>
+			<Entry key="mindepth">1</Entry>			
 			<Entry key="functionset">add div mul sub positive</Entry>
 			<Entry key="terminalset">dd nr spr pt sd sl w</Entry>
 		</Tree>
@@ -15,6 +18,4 @@
 		<Entry key="log.filename">./../../test_outputs/log.txt</Entry>
 		<Entry key="randomizer.seed">0</Entry>
 	</Registry>
-
 </ECF>
-

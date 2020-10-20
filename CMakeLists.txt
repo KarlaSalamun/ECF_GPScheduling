@@ -3,6 +3,7 @@ project(ECF_GP_scheduling)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-g -Wall -Wextra")
+set(CMAKE_EXE_LINKER_FLAGS "-g")
 
 include_directories(include)
 include_directories(include/Nodes)

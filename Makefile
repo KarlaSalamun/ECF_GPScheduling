@@ -1,7 +1,7 @@
 CXX = g++
 WARN = -Wall
-CFLAGS = $(WARN) -ggdb3
-LDFLAGS = $(WARN) -lecf
+CFLAGS = $(WARN) -g
+LDFLAGS = $(WARN) -g -lecf
 
 OBJS = TaskEvalOp.o \
        main.o \

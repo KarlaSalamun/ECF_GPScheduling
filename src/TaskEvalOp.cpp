@@ -48,7 +48,9 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
 
     // get tree from the individual
     Tree::Tree* tree = (Tree::Tree*) individual->getGenotype().get();
-    FitnessP fitness (new FitnessMin);
+    MOFitnessP fitness = static_cast<MOFitnessP> (new MOFitness);
+    // MOFitness fitness;
+    // FitnessP fitness (new FitnessMin);
 
     if( periodic ) {
         tc->load_tasks( test_tasks );
@@ -58,6 +60,7 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
         simulator->set_heuristic( tree );
 
         std::vector<double> skip;
+        std::vector<double> gini;
 
         std::vector<double> utils = { 0.90, 1, 1.1, 1.2, 1.3, 1.4 };
 
@@ -71,16 +74,26 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
                 simulator->set_finish_time( tc->get_hyperperiod() );
                 simulator->run();
                 skip.push_back( simulator->compute_skip_fitness() );
+                gini.push_back( simulator->compute_gini_coeff() );
             }
         }
 
-        double tmp_sum = 0;
+        double tmp_sum1 = 0;
         for( auto & element : skip ) {
-            tmp_sum += element;
+            tmp_sum1 += element;
         }
-        tmp_sum /= skip.size();
+        tmp_sum1 /= skip.size();
 
-        fitness->setValue( tmp_sum );
+        double tmp_sum2 = 0;
+        for( auto & element : gini ) {
+            tmp_sum2 += element;
+        }
+        tmp_sum2 /= gini.size();
+
+        fitness->push_back( (FitnessP) new FitnessMax );
+        fitness->back()->setValue( tmp_sum1 );
+        fitness->push_back( (FitnessP) new FitnessMin );
+        fitness->back()->setValue( tmp_sum2 );
     }
 
     else {
