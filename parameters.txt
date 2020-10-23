@@ -4,7 +4,7 @@
 	</Algorithm>
 	<Genotype>
 		<Tree>
-			<Entry key="maxdepth">4</Entry>
+			<Entry key="maxdepth">2</Entry>
 			<Entry key="mindepth">1</Entry>			
 			<Entry key="functionset">add div mul sub positive</Entry>
 			<Entry key="terminalset">dd nr spr pt sd sl w</Entry>
@@ -12,10 +12,12 @@
 	</Genotype>
 
 	<Registry>
-		<Entry key="population.size">10</Entry>
+		<Entry key="population.size">100</Entry>
 		<Entry key="term.maxgen">50</Entry>
 		<Entry key="log.level">3</Entry>
 		<Entry key="log.filename">./../../test_outputs/log.txt</Entry>
 		<Entry key="randomizer.seed">0</Entry>
+		<Entry key="crossover.genotypes">random</Entry>
+		<Entry key="mutation.genotypes">random</Entry>
 	</Registry>
 </ECF>

@@ -42,7 +42,7 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
     double abs_time = 0;
 
     Scheduler *sched = new Scheduler();
-    UunifastCreator *tc = new UunifastCreator( taskNo, filename, true, 10, 1, 1, 1 );
+    UunifastCreator *tc = new UunifastCreator( 3, filename, true, 10, 1, 1, 1 );
 
     std::copy( test_set.begin(), test_set.end(), std::back_inserter( tctx.pending ) );
 
@@ -64,36 +64,36 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
 
         std::vector<double> utils = { 0.90, 1, 1.1, 1.2, 1.3, 1.4 };
 
-        for( size_t i = 0; i<10; i++) {
-            for( size_t j=0; j<utils.size(); j++ ) {
-                tc->set_overload( utils[j] );
-                tc->set_task_number( 6 );
-                tc->create_test_set( test_tasks );
-                tc->compute_hyperperiod( test_tasks );
-                simulator->set_pending( test_tasks );
-                simulator->set_finish_time( tc->get_hyperperiod() );
-                simulator->run();
-                skip.push_back( simulator->compute_skip_fitness() );
-                gini.push_back( simulator->compute_gini_coeff() );
-            }
-        }
+        // for( size_t i = 0; i<10; i++) {
+        //     for( size_t j=0; j<utils.size(); j++ ) {
+        //         tc->set_overload( utils[j] );
+        //         tc->set_task_number( 6 );
+        //         tc->create_test_set( test_tasks );
+        //         tc->compute_hyperperiod( test_tasks );
+        //         simulator->set_pending( test_tasks );
+        //         simulator->set_finish_time( tc->get_hyperperiod() );
+        //         simulator->run();
+        //         simulator->compute_mean_skip_factor();
+        //         skip.push_back( simulator->compute_skip_fitness() );
+        //         gini.push_back( simulator->compute_gini_coeff() );
+        //     }
+        // }
 
-        double tmp_sum1 = 0;
-        for( auto & element : skip ) {
-            tmp_sum1 += element;
-        }
-        tmp_sum1 /= skip.size();
+        tc->compute_hyperperiod(test_tasks);
+        simulator->set_pending( test_tasks );
+        simulator->set_finish_time( tc->get_hyperperiod() );
+        simulator->run();
+        simulator->compute_mean_skip_factor();
 
-        double tmp_sum2 = 0;
-        for( auto & element : gini ) {
-            tmp_sum2 += element;
-        }
-        tmp_sum2 /= gini.size();
-
-        fitness->push_back( (FitnessP) new FitnessMax );
-        fitness->back()->setValue( tmp_sum1 );
         fitness->push_back( (FitnessP) new FitnessMin );
-        fitness->back()->setValue( tmp_sum2 );
+        fitness->back()->setValue( - simulator->compute_skip_fitness() );
+        fitness->push_back( (FitnessP) new FitnessMin );        
+        fitness->back()->setValue( - simulator->compute_gini_coeff() );
+
+        // fitness->push_back( (FitnessP) new FitnessMin );
+        // fitness->back()->setValue( - compute_mean_fitness( skip ) );
+        // fitness->push_back( (FitnessP) new FitnessMin );
+        // fitness->back()->setValue( compute_mean_fitness( gini ) );
     }
 
     else {
@@ -211,4 +211,14 @@ void TaskEvalOp::WNode( void *ctx )
 
     // printf("%lf\n", ctx_->task->priority);
     // assert(ctx_->task->priority >= 0 && ctx_->task->priority < 1000);
+}
+
+double TaskEvalOp::compute_mean_fitness( std::vector<double> values )
+{
+    double sum = 0;
+    for( size_t i=0; i<values.size(); i++ ) {
+        sum += values[i];
+        assert( values[i]== values[i] );
+    }
+    return sum / values.size();
 }

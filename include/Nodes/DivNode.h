@@ -20,6 +20,10 @@ class DivNode : public Tree::Primitives::Primitive {
 
             getNextArgument(ctx_, tree);
             tmp_priority = ctx_->task->get_priority();
+
+            if( isless(fabs(tmp_priority), 0.0001) ) {
+                tmp_priority = 1;
+            }
              
             getNextArgument(ctx_, tree);
             // printf("%lf / %lf\n", ctx_->task->priority, tmp_priority);

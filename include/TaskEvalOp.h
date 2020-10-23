@@ -42,6 +42,8 @@ public:
     }
 
 private:
+    double compute_mean_fitness( std::vector<double> values );
+
     std::vector<Task *> test_tasks;
     std::vector<Task *> pending_tasks;
     std::vector<Task *> processed_tasks;

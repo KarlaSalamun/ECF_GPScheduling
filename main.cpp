@@ -16,10 +16,13 @@
 #include "Nodes/SubNode.h"
 #include "Nodes/WNode.h"
 #include "UunifastCreator.h"
+#include "Simulator.tpp"
 
 StateP initialize_state();
 void generate_csv(std::vector<double> results, std::vector<double> utils, std::string filename );
 void test_utils_qos( Tree::Tree * heuristic );
+void pareto_test( Tree::Tree * heuristic );
+void test_schedule( Tree::Tree * heuristic );
 
 int main(int argc, char **argv)
 {
@@ -41,12 +44,14 @@ int main(int argc, char **argv)
 	std::vector<double> utils;
 	std::vector<double> results;
 
-	TaskEvalOp *eval = new TaskEvalOp( 4, true, true, "../../test_inputs/100.txt" );
+	TaskEvalOp *eval = new TaskEvalOp( 3, true, true, "../../test_inputs/100.txt" );
 	ofstream best("../../test_outputs/best.txt");
 	best << ind->toString();
 	best.close();
 
-	test_utils_qos( (Tree::Tree*) ind->getGenotype().get() );
+	// test_utils_qos( (Tree::Tree*) ind->getGenotype().get() );
+	// pareto_test( (Tree::Tree*) ind->getGenotype().get() );
+	test_schedule( (Tree::Tree*) ind->getGenotype().get() );
 
 
 	return 0;
@@ -55,7 +60,7 @@ int main(int argc, char **argv)
 StateP initialize_state() {
 	StateP state (new State);
 
-	state->setEvalOp(new TaskEvalOp( 4, true, true, "../../test_inputs/120.txt" ) );
+	state->setEvalOp(new TaskEvalOp( 4, true, true, "../../test_inputs/100.txt" ) );
 	
 	TreeP tree (new Tree::Tree);
 	
@@ -145,9 +150,72 @@ void test_utils_qos( Tree::Tree * heuristic )
             sim->set_pending(test_tasks);
             sim->set_finish_time(taskc->get_hyperperiod());
             sim->run();
-            mean_qos.push_back( sim->get_qos() );
+            mean_qos.push_back( sim->get_qos()) ;
         }
     }
 
     generate_csv( mean_qos, actual_utils, "ecf.csv" );
+}
+
+void pareto_test( Tree::Tree * heuristic )
+{
+    UunifastCreator *taskc = new UunifastCreator( 3, "./../../test_inputs/test_1.txt", true, 20, 4, 2, 1 );
+    Scheduler *sched = new Scheduler();
+    Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
+
+    sim->set_heuristic( heuristic );
+    std::vector<double> utils;
+    std::vector<double> results;
+
+    std::vector<Task *> test_tasks;
+
+    for( size_t i=0; i<=14; i++ ) {
+        utils.push_back( 0.90 + i * 0.05 );
+    }
+
+    std::vector<double> gini;
+    std::vector<double> skip;
+
+    for( size_t i=0; i<utils.size(); i++ ) {
+        taskc->set_overload(utils[i]);
+        taskc->set_task_number(6);
+//        double sum = 0;
+        for (size_t j = 0; j < 100; j++) {
+            do {
+                taskc->create_test_set(test_tasks);
+                taskc->compute_hyperperiod( test_tasks );
+            } while( taskc->get_hyperperiod() > 10000 );
+            double tmp_util = 0;
+            for( auto & element : test_tasks ) {
+                tmp_util += static_cast<double>( element->get_duration() ) / static_cast<double>( element->get_period() ) ;
+            }
+            if( tmp_util >= 0.9 && tmp_util <= 1.60 ) {
+                sim->set_pending(test_tasks);
+                sim->set_finish_time(taskc->get_hyperperiod());
+                sim->run();
+                sim->compute_mean_skip_factor();
+                skip.push_back( sim->compute_skip_fitness() );
+                gini.push_back( sim->compute_gini_coeff() );
+            }
+        }
+    }
+    generate_csv( gini, skip, "pareto_ecf.csv" );
+}
+
+void test_schedule( Tree::Tree * heuristic ) {
+
+	std::vector<Task *> test_tasks;
+
+	UunifastCreator *taskc = new UunifastCreator( 3, "./../../test_inputs/100.txt", true, 20, 4, 2, 1 );
+    Scheduler *sched = new Scheduler();
+    Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
+
+    taskc->load_tasks(test_tasks);
+    sim->set_display();
+    sim->set_heuristic(heuristic);
+    sim->set_pending(test_tasks);
+    taskc->compute_hyperperiod( test_tasks );
+    sim->set_finish_time(taskc->get_hyperperiod());
+    sim->run();
+
 }
