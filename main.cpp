@@ -44,15 +44,11 @@ int main(int argc, char **argv)
 	std::vector<double> utils;
 	std::vector<double> results;
 
-	TaskEvalOp *eval = new TaskEvalOp( 3, true, true, "../../test_inputs/100.txt" );
-	ofstream best("../../test_outputs/best.txt");
-	best << ind->toString();
-	best.close();
+	// ofstream best("../../test_outputs/best.txt");
+	// best << ind->toString();
+	// best.close();
 
-	// test_utils_qos( (Tree::Tree*) ind->getGenotype().get() );
-	// pareto_test( (Tree::Tree*) ind->getGenotype().get() );
 	test_schedule( (Tree::Tree*) ind->getGenotype().get() );
-
 
 	return 0;
 }
@@ -60,7 +56,7 @@ int main(int argc, char **argv)
 StateP initialize_state() {
 	StateP state (new State);
 
-	state->setEvalOp(new TaskEvalOp( 4, true, true, "../../test_inputs/100.txt" ) );
+	state->setEvalOp(new TaskEvalOp( 4, true, true, "../example_set.txt" ) );
 	
 	TreeP tree (new Tree::Tree);
 	

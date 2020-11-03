@@ -2,3 +2,4 @@ cmake-build-debug/
 tree_graphs/
 *.o
 *.elf
+*.a
