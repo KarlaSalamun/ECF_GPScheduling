@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 StateP initialize_state() {
 	StateP state (new State);
 
-	state->setEvalOp(new TaskEvalOp( 4, true, true, "../example_set.txt" ) );
+	state->setEvalOp(new TaskEvalOp( 4, true, true, "./../test_inputs/test_1.txt" ) );
 	
 	TreeP tree (new Tree::Tree);
 	
@@ -103,7 +103,7 @@ StateP initialize_state() {
 
 void generate_csv(std::vector<double> results, std::vector<double> utils, std::string filename )
 {
-    std::string tmp = "./../../test_outputs/";
+    std::string tmp = "./../test_outputs/";
     FILE *fd = fopen( (tmp + filename).c_str(), "w+" );
     for( size_t i=0; i<results.size(); i++ ) {
         fprintf( fd, "%lf,%lf\n", utils[i], results[i] );
@@ -113,7 +113,7 @@ void generate_csv(std::vector<double> results, std::vector<double> utils, std::s
 
 void test_utils_qos( Tree::Tree * heuristic )
 {
-    UunifastCreator *taskc = new UunifastCreator( 3, "./../../test_inputs/test_1.txt", true, 20, 4, 2, 1 );
+    UunifastCreator *taskc = new UunifastCreator( 3, "./../test_inputs/test_1.txt", true, 20, 4, 2, 1 );
     Scheduler *sched = new Scheduler();
     Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
 
@@ -155,7 +155,7 @@ void test_utils_qos( Tree::Tree * heuristic )
 
 void pareto_test( Tree::Tree * heuristic )
 {
-    UunifastCreator *taskc = new UunifastCreator( 3, "./../../test_inputs/test_1.txt", true, 20, 4, 2, 1 );
+    UunifastCreator *taskc = new UunifastCreator( 3, "./../test_inputs/test_1.txt", true, 20, 4, 2, 1 );
     Scheduler *sched = new Scheduler();
     Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
 
@@ -202,7 +202,7 @@ void test_schedule( Tree::Tree * heuristic ) {
 
 	std::vector<Task *> test_tasks;
 
-	UunifastCreator *taskc = new UunifastCreator( 3, "./../../test_inputs/100.txt", true, 20, 4, 2, 1 );
+	UunifastCreator *taskc = new UunifastCreator( 3, "./../test_inputs/test_1.txt", true, 20, 4, 2, 1 );
     Scheduler *sched = new Scheduler();
     Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
 

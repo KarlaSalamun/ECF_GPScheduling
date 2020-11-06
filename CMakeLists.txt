@@ -8,11 +8,13 @@ set(CMAKE_EXE_LINKER_FLAGS "-g")
 include_directories(include)
 include_directories(include/Nodes)
 include_directories(periodic_tasks_simulator/include)
+include_directories(ECF/ECF)
 
 add_executable(ECF_GP_scheduling main.cpp
     		src/TaskEvalOp.cpp)
 
 
 add_subdirectory( periodic_tasks_simulator )
+add_subdirectory( ECF )
 target_link_libraries( ECF_GP_scheduling periodic_simulator )
-target_link_libraries(ECF_GP_scheduling ${CMAKE_CURRENT_SOURCE_DIR}/libECF.a)
+target_link_libraries(ECF_GP_scheduling ${CMAKE_CURRENT_SOURCE_DIR}/ECF/ECF/.libs/libecf.a)
