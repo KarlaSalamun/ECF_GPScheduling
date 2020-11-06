@@ -17,4 +17,4 @@ add_executable(ECF_GP_scheduling main.cpp
 add_subdirectory( periodic_tasks_simulator )
 add_subdirectory( ECF )
 target_link_libraries( ECF_GP_scheduling periodic_simulator )
-target_link_libraries(ECF_GP_scheduling ${CMAKE_CURRENT_SOURCE_DIR}/ECF/ECF/.libs/libecf.a)
+target_link_libraries(ECF_GP_scheduling ECF)

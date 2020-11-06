@@ -1,6 +1,6 @@
 [submodule "periodic_tasks_simulator"]
 	path = periodic_tasks_simulator
-	url = git@github.com:KarlaSalamun/periodic_tasks_simulator.git
+	url = https://github.com/KarlaSalamun/periodic_tasks_simulator.git
 [submodule "ECF"]
 	path = ECF
-	url = git@github.com:KarlaSalamun/ECF.git
+	url = https://github.com/KarlaSalamun/ECF.git
