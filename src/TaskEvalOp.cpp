@@ -64,36 +64,36 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
 
         std::vector<double> utils = { 0.90, 1, 1.1, 1.2, 1.3, 1.4 };
 
-        // for( size_t i = 0; i<10; i++) {
-        //     for( size_t j=0; j<utils.size(); j++ ) {
-        //         tc->set_overload( utils[j] );
-        //         tc->set_task_number( 6 );
-        //         tc->create_test_set( test_tasks );
-        //         tc->compute_hyperperiod( test_tasks );
-        //         simulator->set_pending( test_tasks );
-        //         simulator->set_finish_time( tc->get_hyperperiod() );
-        //         simulator->run();
-        //         simulator->compute_mean_skip_factor();
-        //         skip.push_back( simulator->compute_skip_fitness() );
-        //         gini.push_back( simulator->compute_gini_coeff() );
-        //     }
-        // }
+         for( size_t i = 0; i<10; i++) {
+             for( size_t j=0; j<utils.size(); j++ ) {
+                 tc->set_overload( utils[j] );
+                 tc->set_task_number( 6 );
+                 tc->create_test_set( test_tasks );
+                 tc->compute_hyperperiod( test_tasks );
+                 simulator->set_pending( test_tasks );
+                 simulator->set_finish_time( tc->get_hyperperiod() );
+                 simulator->run();
+                 simulator->compute_mean_skip_factor();
+                 skip.push_back( simulator->compute_skip_fitness() );
+                 gini.push_back( simulator->compute_gini_coeff() );
+             }
+         }
 
-        tc->compute_hyperperiod(test_tasks);
-        simulator->set_pending( test_tasks );
-        simulator->set_finish_time( tc->get_hyperperiod() );
-        simulator->run();
-        simulator->compute_mean_skip_factor();
+//        tc->compute_hyperperiod(test_tasks);
+//        simulator->set_pending( test_tasks );
+//        simulator->set_finish_time( tc->get_hyperperiod() );
+//        simulator->run();
+//        simulator->compute_mean_skip_factor();
+//
+//        fitness->push_back( (FitnessP) new FitnessMin );
+//        fitness->back()->setValue( - simulator->compute_skip_fitness() );
+//        fitness->push_back( (FitnessP) new FitnessMin );
+//        fitness->back()->setValue( - simulator->compute_gini_coeff() );
 
-        fitness->push_back( (FitnessP) new FitnessMin );
-        fitness->back()->setValue( - simulator->compute_skip_fitness() );
-        fitness->push_back( (FitnessP) new FitnessMin );        
-        fitness->back()->setValue( - simulator->compute_gini_coeff() );
-
-        // fitness->push_back( (FitnessP) new FitnessMin );
-        // fitness->back()->setValue( - compute_mean_fitness( skip ) );
-        // fitness->push_back( (FitnessP) new FitnessMin );
-        // fitness->back()->setValue( compute_mean_fitness( gini ) );
+         fitness->push_back( (FitnessP) new FitnessMin );
+         fitness->back()->setValue( - compute_mean_fitness( skip ) );
+         fitness->push_back( (FitnessP) new FitnessMin );
+         fitness->back()->setValue( compute_mean_fitness( gini ) );
     }
 
     else {

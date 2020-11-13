@@ -48,7 +48,8 @@ int main(int argc, char **argv)
 	// best << ind->toString();
 	// best.close();
 
-	test_schedule( (Tree::Tree*) ind->getGenotype().get() );
+//	test_schedule( (Tree::Tree*) ind->getGenotype().get() );
+    test_utils_qos( (Tree::Tree*) ind->getGenotype().get() );
 
 	return 0;
 }
@@ -129,6 +130,7 @@ void test_utils_qos( Tree::Tree * heuristic )
 
     std::vector<double> mean_qos;
     std::vector<double> actual_utils;
+    std::vector<double> low_qos;
 
     for( size_t i=0; i<utils.size(); i++ ) {
         taskc->set_overload(utils[i]);
@@ -146,6 +148,9 @@ void test_utils_qos( Tree::Tree * heuristic )
             sim->set_pending(test_tasks);
             sim->set_finish_time(taskc->get_hyperperiod());
             sim->run();
+            if( sim->get_qos() < 0.5 ) {
+                low_qos.push_back( sim->get_qos() );
+            }
             mean_qos.push_back( sim->get_qos()) ;
         }
     }
