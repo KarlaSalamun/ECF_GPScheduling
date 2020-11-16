@@ -11,7 +11,10 @@ include_directories(periodic_tasks_simulator/include)
 include_directories(ECF/ECF)
 
 add_executable(ECF_GP_scheduling main.cpp
-    		src/TaskEvalOp.cpp)
+    		src/TaskEvalOp.cpp
+			src/RTO.cpp
+			src/RLP.cpp
+			src/EDL.cpp)
 
 
 add_subdirectory( periodic_tasks_simulator )

@@ -17,6 +17,9 @@
 #include "Nodes/WNode.h"
 #include "UunifastCreator.h"
 #include "Simulator.tpp"
+#include "RTO.h"
+#include "RLP.h"
+#include "EDL.h"
 
 StateP initialize_state();
 void generate_csv(std::vector<double> results, std::vector<double> utils, std::string filename );
@@ -116,9 +119,12 @@ void test_utils_qos( Tree::Tree * heuristic )
 {
     UunifastCreator *taskc = new UunifastCreator( 3, "./../test_inputs/test_1.txt", true, 20, 4, 2, 1 );
     Scheduler *sched = new Scheduler();
-    Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
+//    Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
 
-    sim->set_heuristic( heuristic );
+    RTO *rto = new RTO( taskc, 5, sched, 72, false );
+    EDL *edl = new EDL( rto );
+    RLP *rlp = new RLP( edl, 1 );
+
     std::vector<double> utils;
     std::vector<double> results;
 
@@ -145,17 +151,19 @@ void test_utils_qos( Tree::Tree * heuristic )
                 tmp_util += static_cast<double>( element->get_duration() ) / static_cast<double>( element->get_period() ) ;
             }
             actual_utils.push_back( tmp_util );
-            sim->set_pending(test_tasks);
-            sim->set_finish_time(taskc->get_hyperperiod());
-            sim->run();
-            if( sim->get_qos() < 0.5 ) {
-                low_qos.push_back( sim->get_qos() );
-            }
-            mean_qos.push_back( sim->get_qos()) ;
+            rto->set_pending( test_tasks );
+            rto->compute_eq_utilization();
+            rto->set_finish_time( taskc->get_hyperperiod() );
+            edl->compute_static( test_tasks );
+            rlp->set_waiting( test_tasks );
+            rlp->set_finish_time( taskc->get_hyperperiod() );
+            rlp->set_heuristic( heuristic );
+            rlp->simulate();
+            mean_qos.push_back( rlp->get_qos());
         }
     }
 
-    generate_csv( mean_qos, actual_utils, "ecf.csv" );
+    generate_csv( mean_qos, actual_utils, "rlp_modified.csv" );
 }
 
 void pareto_test( Tree::Tree * heuristic )

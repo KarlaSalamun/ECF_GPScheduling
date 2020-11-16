@@ -9,6 +9,9 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include "RTO.h"
+#include "EDL.h"
+#include "RLP.h"
 using namespace std;
 
 // TODO staviti u ctx i time
@@ -44,6 +47,10 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
     Scheduler *sched = new Scheduler();
     UunifastCreator *tc = new UunifastCreator( 3, filename, true, 10, 1, 1, 1 );
 
+    RTO *rto = new RTO( tc, 5, sched, 72, false );
+    EDL *edl = new EDL( rto );
+    RLP *rlp = new RLP( edl, 1 );
+
     std::copy( test_set.begin(), test_set.end(), std::back_inserter( tctx.pending ) );
 
     // get tree from the individual
@@ -70,12 +77,18 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
                  tc->set_task_number( 6 );
                  tc->create_test_set( test_tasks );
                  tc->compute_hyperperiod( test_tasks );
-                 simulator->set_pending( test_tasks );
-                 simulator->set_finish_time( tc->get_hyperperiod() );
-                 simulator->run();
-                 simulator->compute_mean_skip_factor();
-                 skip.push_back( simulator->compute_skip_fitness() );
-                 gini.push_back( simulator->compute_gini_coeff() );
+
+                 rto->set_pending( test_tasks );
+                 rto->compute_eq_utilization();
+                 rto->set_finish_time( tc->get_hyperperiod() );
+                 edl->compute_static( test_tasks );
+                 rlp->set_waiting( test_tasks );
+                 rlp->set_finish_time( tc->get_hyperperiod() );
+                 rlp->set_heuristic( tree );
+                 rlp->simulate();
+
+                 skip.push_back( rlp->compute_skip_fitness() );
+                 gini.push_back( rlp->compute_gini_coeff() );
              }
          }
 
