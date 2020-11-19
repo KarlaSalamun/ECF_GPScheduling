@@ -24,6 +24,12 @@ public:
         running = nullptr;
         missed_tasks = 0;
         completed = 0;
+        display_sched = false;
+        fd = fopen( "../schedule.tex", "w+" );
+    }
+
+    ~RLP() {
+        fclose(fd);
     }
     void simulate();
     double compute_mean_skip_factor();
@@ -34,6 +40,9 @@ public:
     }
     size_t get_wasted_time() {
         return wasted_time;
+    }
+    double get_finish_time() {
+        return this->finish_time;
     }
     void set_waiting( std::vector<Task *> pending )
     {
@@ -46,6 +55,11 @@ public:
     void set_heuristic( Tree::Tree *heuristic ) {
         this->heuristic = heuristic;
     }
+
+    void update_state( Task *current, std::vector<Task *> ready_tasks );
+
+    bool display_sched;
+    FILE *fd;
 
 private:
     struct task_ctx tctx;

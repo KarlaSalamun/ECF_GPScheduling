@@ -200,7 +200,7 @@ bool EDL::compute_availability( double time )
         if( time >= EDL_dynamic_deadline_vector[i] ) {
             idle_interval = EDL_dynamic_deadline_vector[i];
             index = i;
-            if( isless( time, idle_interval + EDL_dynamic_idle_time_vector[i] ) ) {
+            if( isless( time, idle_interval + EDL_dynamic_idle_time_vector[index] ) ) {
                 return true;
             }
         }

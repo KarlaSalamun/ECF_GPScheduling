@@ -27,8 +27,22 @@ void RLP::simulate()
     blue_ready.clear();
     red_ready.clear();
     running = nullptr;
-    std::string prefix = "./../../test_outputs/";
-    FILE *fd = fopen( (prefix + "rlp_schedule1.txt").c_str(), "w+" );
+
+    assert(!waiting.empty());
+//    std::string prefix = "./../test_outputs/";
+//    FILE *fd = fopen( (prefix + "rlp_schedule1.txt").c_str(), "w+" );
+
+
+    if( display_sched ) {
+
+        fprintf( fd, "\\begin{figure}[ht]\n" );
+        fprintf( fd, "\\begin{RTGrid}[width=10cm]{%lu}{%d}\n", waiting.size(), static_cast<int>(finish_time) );
+        for( auto & element : waiting ) {
+            fprintf( fd, "\\multido{\\n=0+%d}{%d}{\n", static_cast<int>(element->get_period()), static_cast<int>( finish_time / element->get_period() ) );
+            fprintf( fd, "\t\\TaskArrDead{%d}{\\n}{%d}\n", element->get_id() + 1, static_cast<int>(element->get_period()) );
+            fprintf( fd, "}\n" );
+        }
+    }
 
     for( auto & element : waiting ) {
         element->set_state( RED );      // first instance is always red
@@ -36,23 +50,25 @@ void RLP::simulate()
         element->initialize_task();
         element->set_skip_factor(2);
         element->set_abs_dd();
-        fprintf( fd, "%lf %lf\n", element->get_period(), element->get_duration() );
+//        fprintf( fd, "%lf %lf\n", element->get_period(), element->get_duration() );
     }
 
 //    edl->compute_schedule( waiting, nullptr, 0 );
     edl->compute_static( waiting );
-    edl->compute_dynamic( 0, waiting, nullptr );
+//    edl->compute_dynamic( 0, waiting, nullptr );
 
-    while( abs_time <= finish_time ) {
+    while( abs_time < finish_time ) {
         algorithm(abs_time);
-        if(running) {
-            fprintf( fd, "%lf\t%d\t%s\n", abs_time, running->get_id(), running->get_state() == RED ? "red" : "blue" );
-        }
-        else {
-            fprintf( fd, "%lf\t null\n", abs_time );
-        }
         abs_time += time_slice;
     }
+
+    if( display_sched ) {
+        fprintf( fd, "{%d}\n", static_cast<int>(abs_time) );
+        fprintf( fd, "\\end{RTGrid}\n" );
+        fprintf( fd, "\\end{figure}\n" );
+        fclose(fd);
+    }
+
     for( auto & element : waiting ) {
 //		printf( "%d tardiness: %f\n", element->get_id(), element->get_tardiness() );
         element->skip_factors.push_back( element->get_curr_skip_value() );
@@ -84,7 +100,7 @@ void RLP::simulate()
     if( running ) {
         waiting.push_back( std::move( running ) );
     }
-    assert( waiting.size() + red_ready.size() + blue_ready.size() == 6 );
+//    assert( waiting.size() + red_ready.size() + blue_ready.size() == 6 );
     if( !red_ready.empty() ) {
         std::copy( red_ready.begin(), red_ready.end(), std::back_inserter( waiting ) );
     }
@@ -92,18 +108,20 @@ void RLP::simulate()
         std::copy( blue_ready.begin(), blue_ready.end(), std::back_inserter( waiting ) );
     }
 
+    assert( !waiting.empty() );
 
 //    for( auto & element : waiting ) {
 //        if( element->get_curr_skip_value() >= 2 )
 //            element->skip_factors.push_back( element->get_curr_skip_value() );
 //    }
     compute_qos();
-    fclose( fd );
 }
 
 void RLP::algorithm( double current_time )
 {
 //    printf("current time: %f\n", current_time);
+    bool running_changed = false;
+    bool taskStarted = false;
 
     // check if running task is going to miss deadline
     if( running ) {
@@ -117,7 +135,10 @@ void RLP::algorithm( double current_time )
             running->set_state( RED );
             running->set_arrival_time();
             running->reset_remaining();
-//            running->reset_skip_value();
+            running->reset_skip_value();
+            if( display_sched ) {
+                fprintf( fd, "{%d}\n", static_cast<int>(abs_time) );
+            }
             running->update_params();
             waiting.push_back( running );
             running = nullptr;
@@ -196,24 +217,14 @@ void RLP::algorithm( double current_time )
                           -> bool { return a->get_abs_due_date() < b->get_abs_due_date(); });
     }
     if( !blue_ready.empty() ) {
-        std::vector<Task *> tmp_pending;
-        std::vector<Task *> tmp_processed;
-        tctx.processed.clear();
-
-//                std::copy( ready.begin(), ready.end(), std::back_inserter( tctx.pending ) );
         it = blue_ready.begin();
         while( it != blue_ready.end() ) {
-            tctx.pending.clear();
-            Task *tmp = std::move( *it );
-            tctx.task = tmp;
-            tctx.time = abs_time;
-            it = blue_ready.erase( it );
-            std::copy( blue_ready.begin(), blue_ready.end(), std::back_inserter( tctx.pending ) );
-            heuristic->execute( &tctx );
-            assert( tctx.task->get_priority() == tctx.task->get_priority() );
-            tctx.processed.push_back( std::move( tmp ) );
+            double priority;
+            update_state( *it, blue_ready );
+            heuristic->execute( &priority );
+            (*it)->set_priority( priority );
+            it++;
         }
-        std::copy( tctx.processed.begin(), tctx.processed.end(), std::back_inserter( blue_ready ) );
         std::sort(blue_ready.begin(), blue_ready.end(),
                   [](const Task *a, const Task *b)
                           -> bool { return a->get_priority() < b->get_priority(); });
@@ -223,6 +234,9 @@ void RLP::algorithm( double current_time )
 
     if( running ) {
         if( running->isFinished() ) {
+            if( display_sched ) {
+                fprintf( fd, "{%d}\n", static_cast<int>(abs_time) );
+            }
             completed++;
             if( running->get_state() == BLUE && !blue_ready.empty() ) {
                 if( !red_ready.empty() ) {
@@ -240,9 +254,17 @@ void RLP::algorithm( double current_time )
             if( running->isReady( current_time ) ) {
                 if( running->get_state() == BLUE ) {
                     blue_ready.push_back( running );
+                    it = blue_ready.begin();
+                    while( it != blue_ready.end() ) {
+                        double priority;
+                        update_state( *it, blue_ready );
+                        heuristic->execute( &priority );
+                        (*it)->set_priority( priority );
+                        it++;
+                    }
                     std::sort(blue_ready.begin(), blue_ready.end(),
                               [](const Task *a, const Task *b)
-                                      -> bool { return a->get_abs_due_date() < b->get_abs_due_date(); });
+                                      -> bool { return a->get_priority() < b->get_priority(); });
                 }
                 else {
                     red_ready.push_back( running );
@@ -302,9 +324,11 @@ void RLP::algorithm( double current_time )
 //                printf( "time : %f\tred instance of task %d is running, %f remaining\n", current_time, running->get_id(), running->get_remaining() );
             }
         }
+        if(running) {
+            taskStarted = true;
+        }
     }
     else {
-        bool running_changed = false;
         edl->compute_availability(current_time);
         if (running->get_state() == RED and availability and !blue_ready.empty()) {
 //            running->update_remaining();
@@ -329,7 +353,7 @@ void RLP::algorithm( double current_time )
 
                     }
                 }
-                if (blue_ready.front()->get_abs_due_date() < running->get_abs_due_date() && !running_changed) {
+                if (blue_ready.front()->get_priority() < running->get_priority() && !running_changed) {
                     running_changed = true;
                     running->update_remaining();
                     blue_ready.push_back(running);
@@ -340,6 +364,17 @@ void RLP::algorithm( double current_time )
         }
         if (!running_changed) {
             running->update_remaining();
+        }
+    }
+    if(running) {
+        if( display_sched ) {
+            if( running_changed ) {
+                fprintf( fd, "{%d}\n", static_cast<int>(abs_time) );
+                fprintf( fd, "\\TaskExecution[color=%s]{%d}{%d}", (running->get_state() == RED ? "red" : "blue"), running->get_id() + 1, static_cast<int>(abs_time) );
+            }
+            if( taskStarted ) {
+                fprintf( fd, "\\TaskExecution[color=%s]{%d}{%d}", (running->get_state() == RED ? "red" : "blue"), running->get_id() + 1, static_cast<int>(abs_time) );
+            }
         }
     }
 
@@ -399,4 +434,35 @@ double RLP::compute_skip_fitness()
     }
     assert( sum / static_cast<double>( tasks ) <= 1 );
     return sum / static_cast<double>( tasks );
+}
+
+void RLP::update_state( Task *current, std::vector<Task *> ready_tasks ) {
+    double due_date = static_cast<double>(current->get_abs_due_date());
+    double remaining_no = static_cast<double>(ready_tasks.size());
+    double spr = 0;
+    double sd = 0;
+    for( auto & element : ready_tasks ) {
+        if( element->get_id() == current->get_id() ) {
+            continue;
+        }
+        spr += static_cast<double>(element->get_duration());
+        sd += static_cast<double>(element->get_abs_due_date());
+    }
+    double pt = static_cast<double>(current->get_duration());
+    double sl = static_cast<double>(std::max( current->get_abs_due_date() - current->get_duration() - current->get_time_started(), 0));
+    double w = static_cast<double>(current->get_weight());
+    double rt = static_cast<double>(current->get_remaining());
+    double skip = static_cast<double>(current->get_curr_skip_value());
+    double QoS = static_cast<double>(current->get_completed()) / static_cast<double>(current->get_released());
+
+    heuristic->setTerminalValue( "dd", &due_date);
+    heuristic->setTerminalValue( "nr", &remaining_no );
+    heuristic->setTerminalValue( "spr", &spr );
+    heuristic->setTerminalValue( "pt", &pt );
+    heuristic->setTerminalValue( "sd", &sd );
+    heuristic->setTerminalValue( "sl", &sl );
+    heuristic->setTerminalValue( "w", &w );
+    heuristic->setTerminalValue( "rt", &rt );
+    heuristic->setTerminalValue( "skip", &skip );
+    heuristic->setTerminalValue( "QoS", &QoS );
 }

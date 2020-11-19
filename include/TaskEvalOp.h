@@ -36,6 +36,9 @@ public:
     void SPrNode( void *ctx );
     void SubNode( void *ctx );
     void WNode( void *ctx );
+    void rtNode( void *ctx );
+    void skipNode( void *ctx );
+    void QoSNode( void *ctx );
 
     void set_filename( std::string filename ) {
     	this->filename = filename;

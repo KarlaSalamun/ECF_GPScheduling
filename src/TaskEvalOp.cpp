@@ -69,6 +69,9 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
         std::vector<double> skip;
         std::vector<double> gini;
 
+        std::vector<double> qos;
+        std::vector<double> wasted;
+
         std::vector<double> utils = { 0.90, 1, 1.1, 1.2, 1.3, 1.4 };
 
          for( size_t i = 0; i<10; i++) {
@@ -78,17 +81,24 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
                  tc->create_test_set( test_tasks );
                  tc->compute_hyperperiod( test_tasks );
 
-                 rto->set_pending( test_tasks );
-                 rto->compute_eq_utilization();
-                 rto->set_finish_time( tc->get_hyperperiod() );
-                 edl->compute_static( test_tasks );
-                 rlp->set_waiting( test_tasks );
-                 rlp->set_finish_time( tc->get_hyperperiod() );
-                 rlp->set_heuristic( tree );
-                 rlp->simulate();
+                 simulator->set_pending( test_tasks );
+                simulator->set_finish_time( tc->get_hyperperiod() );
+                simulator->run();
+                simulator->compute_mean_skip_factor();
 
-                 skip.push_back( rlp->compute_skip_fitness() );
-                 gini.push_back( rlp->compute_gini_coeff() );
+//                 rto->set_pending( test_tasks );
+//                 rto->compute_eq_utilization();
+//                 rto->set_finish_time( tc->get_hyperperiod() );
+//                 edl->compute_static( test_tasks );
+//                 rlp->set_waiting( test_tasks );
+//                 rlp->set_finish_time( tc->get_hyperperiod() );
+//                 rlp->set_heuristic( tree );
+//                 rlp->simulate();
+
+                 qos.push_back( simulator->get_qos() );
+                 wasted.push_back( simulator->get_time_wasted() / simulator->get_finish_time() );
+//                    skip.push_back( simulator->compute_skip_fitness() );
+//                    gini.push_back( simulator->compute_gini_coeff() );
              }
          }
 
@@ -103,10 +113,10 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
 //        fitness->push_back( (FitnessP) new FitnessMin );
 //        fitness->back()->setValue( - simulator->compute_gini_coeff() );
 
+         fitness->push_back( (FitnessP) new FitnessMax );
+         fitness->back()->setValue( compute_mean_fitness( qos ) );
          fitness->push_back( (FitnessP) new FitnessMin );
-         fitness->back()->setValue( - compute_mean_fitness( skip ) );
-         fitness->push_back( (FitnessP) new FitnessMin );
-         fitness->back()->setValue( compute_mean_fitness( gini ) );
+         fitness->back()->setValue( compute_mean_fitness( wasted ) );
     }
 
     else {
@@ -139,7 +149,7 @@ void TaskEvalOp::ddNode( void *ctx )
     // assert( ctx_->task->duration >= 0 && ctx_->task->duration < reinterpret_cast<Task_p *>(ctx_->task)->period);
 
 
-	ctx_->task->set_priority( ctx_->task->get_abs_due_date() );
+	ctx_->task->set_priority( static_cast<double>(ctx_->task->get_abs_due_date() ));
 
     // printf("%lf\n", ctx_->task->priority);
     // assert(ctx_->task->priority > 0 && ctx_->task->priority < 1000);
@@ -152,7 +162,7 @@ void TaskEvalOp::NrNode( void *ctx )
     // assert( ctx_->task->duration >= 0 && ctx_->task->duration < reinterpret_cast<Task_p *>(ctx_->task)->period);
 
 
-	ctx_->task->set_priority( ctx_->pending.size() );	
+	ctx_->task->set_priority( static_cast<double>(ctx_->pending.size() ));
 
     // printf("%lf\n", ctx_->task->priority);
     // assert(ctx_->task->priority >= 0 && ctx_->task->priority < 1000);
@@ -164,7 +174,7 @@ void TaskEvalOp::ptNode( void *ctx )
     // assert( ctx_->task->duration >= 0 && ctx_->task->duration < ctx_->task->period);
     // assert( ctx_->task->duration >= 0 && ctx_->task->duration < reinterpret_cast<Task_p *>(ctx_->task)->period);
 
-	ctx_->task->set_priority( ctx_->task->get_duration() );
+	ctx_->task->set_priority( static_cast<double>(ctx_->task->get_duration() ));
 
     // printf("%lf\n", ctx_->task->priority);
     // assert(ctx_->task->priority >= 0 && ctx_->task->priority < 1000);
@@ -193,7 +203,7 @@ void TaskEvalOp::SLNode( void *ctx )
 {
 	struct task_ctx *ctx_ = reinterpret_cast<struct task_ctx *>(ctx);
     // assert( ctx_->task->duration >= 0 && ctx_->task->duration < ctx_->task->period);
-	ctx_->task->set_priority( std::max( ctx_->task->get_abs_due_date() - ctx_->task->get_duration() - ctx_->task->get_time_started(), 0. ));
+	ctx_->task->set_priority( static_cast<double>(std::max( ctx_->task->get_abs_due_date() - ctx_->task->get_duration() - ctx_->task->get_time_started(), 0 )));
 
     // printf("%lf\n", ctx_->task->priority);
     // assert(ctx_->task->priority >= 0 && ctx_->task->priority < 1000);
@@ -226,6 +236,45 @@ void TaskEvalOp::WNode( void *ctx )
     // assert(ctx_->task->priority >= 0 && ctx_->task->priority < 1000);
 }
 
+void TaskEvalOp::rtNode( void *ctx )
+{
+    struct task_ctx *ctx_ = reinterpret_cast<struct task_ctx *>(ctx);
+    // assert( ctx_->task->duration >= 0 && ctx_->task->duration < ctx_->task->period);
+    // assert( ctx_->task->duration >= 0 && ctx_->task->duration < reinterpret_cast<Task_p *>(ctx_->task)->period);
+
+
+    ctx_->task->set_priority( static_cast<double>(ctx_->task->get_remaining() ));
+
+    // printf("%lf\n", ctx_->task->priority);
+    // assert(ctx_->task->priority > 0 && ctx_->task->priority < 1000);
+}
+
+void TaskEvalOp::skipNode( void *ctx )
+{
+    struct task_ctx *ctx_ = reinterpret_cast<struct task_ctx *>(ctx);
+    // assert( ctx_->task->duration >= 0 && ctx_->task->duration < ctx_->task->period);
+    // assert( ctx_->task->duration >= 0 && ctx_->task->duration < reinterpret_cast<Task_p *>(ctx_->task)->period);
+
+
+    ctx_->task->set_priority(static_cast<double>( ctx_->task->get_curr_skip_value() ));
+
+    // printf("%lf\n", ctx_->task->priority);
+    // assert(ctx_->task->priority > 0 && ctx_->task->priority < 1000);
+}
+
+void TaskEvalOp::QoSNode( void *ctx )
+{
+    struct task_ctx *ctx_ = reinterpret_cast<struct task_ctx *>(ctx);
+    // assert( ctx_->task->duration >= 0 && ctx_->task->duration < ctx_->task->period);
+    // assert( ctx_->task->duration >= 0 && ctx_->task->duration < reinterpret_cast<Task_p *>(ctx_->task)->period);
+
+
+    ctx_->task->set_priority(static_cast<double>( ctx_->task->get_completed() ) / static_cast<double>( ctx_->task->get_released() ) );
+
+    // printf("%lf\n", ctx_->task->priority);
+    // assert(ctx_->task->priority > 0 && ctx_->task->priority < 1000);
+}
+
 double TaskEvalOp::compute_mean_fitness( std::vector<double> values )
 {
     double sum = 0;
@@ -235,3 +284,4 @@ double TaskEvalOp::compute_mean_fitness( std::vector<double> values )
     }
     return sum / values.size();
 }
+
