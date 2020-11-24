@@ -41,6 +41,7 @@ int main(int argc, char **argv)
     for( IndividualP ind : *state->getPopulation()->getLocalDeme() ) {
 
         double fitness1 = (static_pointer_cast<MOFitness> (ind->getFitness()))->getValueOfObjective(0);
+        double fitness2 = (static_pointer_cast<MOFitness> (ind->getFitness()))->getValueOfObjective(1);
 
         if( fitness1 > max ) {
             max = fitness1;
@@ -53,6 +54,9 @@ int main(int argc, char **argv)
 
     cout << tree;
 
+    FILE *fd = fopen( "./../../test_outputs/best_heuristic.txt", "w+" );
+    fprintf( fd, "%s", tree.c_str() );
+
     cout << (static_pointer_cast<MOFitness> (best->getFitness()))->getValueOfObjective(0) << "\t" << (static_pointer_cast<MOFitness> (best->getFitness()))->getValueOfObjective(1);
 
 	// ofstream best("../../test_outputs/best.txt");
@@ -60,8 +64,8 @@ int main(int argc, char **argv)
 	// best.close();
 
     test_utils_qos( (Tree::Tree*) best->getGenotype().get() );
-//    test_schedule( (Tree::Tree*) best->getGenotype().get() );
-        test_utils_wCPU( (Tree::Tree*) best->getGenotype().get() );
+    test_schedule( (Tree::Tree*) best->getGenotype().get() );
+    test_utils_wCPU( (Tree::Tree*) best->getGenotype().get() );
 //
 	return 0;
 }
@@ -129,8 +133,8 @@ void test_utils_qos( Tree::Tree * heuristic )
     }
 
     generate_csv( mean_qos, actual_utils, "rlp_modified.csv" );
-//    generate_csv( mean_gini, actual_utils, "modif_gini.csv" );
-//    generate_csv( mean_skips, actual_utils, "modif_skips.csv" );
+    generate_csv( mean_gini, actual_utils, "modif_gini.csv" );
+    generate_csv( mean_skips, actual_utils, "modif_skips.csv" );
 }
 
 void test_utils_wCPU( Tree::Tree * heuristic )

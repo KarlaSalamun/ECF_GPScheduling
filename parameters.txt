@@ -4,22 +4,23 @@
 	</Algorithm>
 	<Genotype>
 		<Tree>
-		    <Entry key="initmaxdepth">6</Entry>
-			<Entry key="maxdepth">10</Entry>
-			<Entry key="mindepth">1</Entry>			
+		    <Entry key="initmaxdepth">5</Entry>
+		    <Entry key="initmindepth">5</Entry>
+			<Entry key="maxdepth">5</Entry>
+			<Entry key="mindepth">5</Entry>
 			<Entry key="functionset">+ - / * pos</Entry>
 			<Entry key="terminalset">dd nr spr pt sd sl w rt skip QoS</Entry>
 		</Tree>
 	</Genotype>
 
 	<Registry>
-		<Entry key="population.size">50</Entry>
-		<Entry key="term.maxgen">30</Entry>
+		<Entry key="population.size">100</Entry>
+		<Entry key="term.maxgen">50</Entry>
 		<Entry key="log.level">3</Entry>
 		<Entry key="log.filename">./../../test_outputs/log.txt</Entry>
 		<Entry key="randomizer.seed">0</Entry>
 		<Entry key="crossover.genotypes">random</Entry>
-		<Entry key="mutation.indprob">0.3</Entry>
+		<Entry key="mutation.indprob">0.4</Entry>
 		<Entry key="mutation.genotypes">random</Entry>
 	</Registry>
 </ECF>
