@@ -20,6 +20,8 @@ void BWP::simulate( double time_slice )
     bwp_completed = 0;
     bwp_missed = 0;
 
+    wasted = 0;
+
     Task *running = nullptr;				// TODO: ovo je leak
     abs_time = 0;
     red.clear();
