@@ -3,10 +3,10 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <BWP.h>
 #include "UunifastCreator.h"
 #include "Simulator.tpp"
 #include "RTO.h"
-#include "RLP.h"
 #include "EDL.h"
 
 void generate_csv(std::vector<double> results, std::vector<double> utils, std::string filename );
@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 		return 1;
 
 	state->run();
+
 
 //	std::vector<IndividualP> hof = state->getHoF()->getBest();
 //	ind = hof[0];
@@ -64,8 +65,8 @@ int main(int argc, char **argv)
 	// best.close();
 
     test_utils_qos( (Tree::Tree*) best->getGenotype().get() );
-    test_schedule( (Tree::Tree*) best->getGenotype().get() );
-    test_utils_wCPU( (Tree::Tree*) best->getGenotype().get() );
+//    test_schedule( (Tree::Tree*) best->getGenotype().get() );
+//    test_utils_wCPU( (Tree::Tree*) best->getGenotype().get() );
 //
 	return 0;
 }
@@ -86,9 +87,7 @@ void test_utils_qos( Tree::Tree * heuristic )
     Scheduler *sched = new Scheduler();
 //    Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
 
-    RTO *rto = new RTO( taskc, 5, sched, 72, false );
-    EDL *edl = new EDL( rto );
-    RLP *rlp = new RLP( edl, 1 );
+    BWP *bwp = new BWP( 6, taskc, sched, 72, false );
 
     std::vector<double> utils;
     std::vector<double> results;
@@ -100,6 +99,7 @@ void test_utils_qos( Tree::Tree * heuristic )
     }
 
     std::vector<double> mean_qos;
+    std::vector<double> mean_wasted;
     std::vector<double> mean_gini;
     std::vector<double> mean_skips;
     std::vector<double> actual_utils;
@@ -118,23 +118,20 @@ void test_utils_qos( Tree::Tree * heuristic )
                 tmp_util += static_cast<double>( element->get_duration() ) / static_cast<double>( element->get_period() ) ;
             }
             actual_utils.push_back( tmp_util );
-            rto->set_pending( test_tasks );
-            rto->compute_eq_utilization();
-            rto->set_finish_time( taskc->get_hyperperiod() );
-            edl->compute_static( test_tasks );
-            rlp->set_waiting( test_tasks );
-            rlp->set_finish_time( taskc->get_hyperperiod() );
-            rlp->set_heuristic( heuristic );
-            rlp->simulate();
-            mean_qos.push_back( rlp->get_qos() );
-            mean_skips.push_back( rlp->compute_mean_skip_factor());
-            mean_gini.push_back( rlp->compute_gini_coeff() );
+            bwp->set_pending( test_tasks );
+            bwp->set_heuristic( heuristic );
+            bwp->set_finish_time( taskc->get_hyperperiod() );
+            bwp->simulate(1);
+            mean_qos.push_back( bwp->get_qos() );
+            mean_wasted.push_back( bwp->get_wasted() / taskc->get_hyperperiod() );
         }
     }
 
-    generate_csv( mean_qos, actual_utils, "rlp_modified.csv" );
-    generate_csv( mean_gini, actual_utils, "modif_gini.csv" );
-    generate_csv( mean_skips, actual_utils, "modif_skips.csv" );
+    generate_csv( mean_qos, actual_utils, "bwp_modified.csv" );
+    generate_csv( mean_wasted, actual_utils, "bwp_modified_wCPU.csv" );
+
+//    generate_csv( mean_gini, actual_utils, "modif_gini.csv" );
+//    generate_csv( mean_skips, actual_utils, "modif_skips.csv" );
 }
 
 void test_utils_wCPU( Tree::Tree * heuristic )
@@ -144,8 +141,6 @@ void test_utils_wCPU( Tree::Tree * heuristic )
 //    Simulator<Tree::Tree *> *sim = new Simulator<Tree::Tree *>( 1, taskc->get_hyperperiod(), taskc, sched, true, false );
 
     RTO *rto = new RTO( taskc, 5, sched, 72, false );
-    EDL *edl = new EDL( rto );
-    RLP *rlp = new RLP( edl, 1 );
 
     std::vector<double> utils;
     std::vector<double> results;
@@ -174,13 +169,6 @@ void test_utils_wCPU( Tree::Tree * heuristic )
             actual_utils.push_back( tmp_util );
             rto->set_pending( test_tasks );
             rto->compute_eq_utilization();
-            rto->set_finish_time( taskc->get_hyperperiod() );
-            edl->compute_static( test_tasks );
-            rlp->set_waiting( test_tasks );
-            rlp->set_finish_time( taskc->get_hyperperiod() );
-            rlp->set_heuristic( heuristic );
-            rlp->simulate();
-            wasted.push_back( rlp->get_wasted_time() / rlp->get_finish_time() );
         }
     }
 
@@ -240,8 +228,6 @@ void test_schedule( Tree::Tree * heuristic ) {
     Scheduler *sched = new Scheduler();
 
     RTO *rto = new RTO( taskc, 5, sched, 72, false );
-    EDL *edl = new EDL( rto );
-    RLP *rlp = new RLP( edl, 1 );
 
 	std::vector<Task *> test_tasks;
 
@@ -249,10 +235,4 @@ void test_schedule( Tree::Tree * heuristic ) {
     rto->set_pending( test_tasks );
     rto->compute_eq_utilization();
     rto->set_finish_time( taskc->get_hyperperiod() );
-    edl->compute_static( test_tasks );
-    rlp->set_waiting( test_tasks );
-    rlp->display_sched = true;
-    rlp->set_finish_time( taskc->get_hyperperiod() );
-    rlp->set_heuristic( heuristic );
-    rlp->simulate();
 }

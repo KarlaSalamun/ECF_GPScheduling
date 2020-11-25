@@ -14,8 +14,8 @@
 	</Genotype>
 
 	<Registry>
-		<Entry key="population.size">100</Entry>
-		<Entry key="term.maxgen">50</Entry>
+		<Entry key="population.size">50</Entry>
+		<Entry key="term.maxgen">30</Entry>
 		<Entry key="log.level">3</Entry>
 		<Entry key="log.filename">./../../test_outputs/log.txt</Entry>
 		<Entry key="randomizer.seed">0</Entry>

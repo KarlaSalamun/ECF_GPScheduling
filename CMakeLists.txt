@@ -17,7 +17,7 @@ include_directories(ECF/ECF)
 add_executable(ECF_GP_scheduling main.cpp
     		src/TaskEvalOp.cpp
 			src/RTO.cpp
-			src/RLP.cpp
+			src/BWP.cpp
 			src/EDL.cpp include/Nodes/rtNode.h include/Nodes/skipNode.h include/Nodes/QoSNode.h)
 
 

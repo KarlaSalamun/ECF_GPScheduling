@@ -10,8 +10,7 @@
 #include <iostream>
 #include <string>
 #include "RTO.h"
-#include "EDL.h"
-#include "RLP.h"
+#include "BWP.h"
 using namespace std;
 
 // TODO staviti u ctx i time
@@ -45,11 +44,9 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
     double abs_time = 0;
 
     Scheduler *sched = new Scheduler();
-    UunifastCreator *tc = new UunifastCreator( 3, filename, true, 10, 1, 1, 1 );
+    UunifastCreator *tc = new UunifastCreator( 6, filename, true, 10, 1, 1, 1 );
 
-    RTO *rto = new RTO( tc, 5, sched, 72, false );
-    EDL *edl = new EDL( rto );
-    RLP *rlp = new RLP( edl, 1 );
+    BWP *bwp = new BWP( 6, tc, sched, 72, false );
 
     std::copy( test_set.begin(), test_set.end(), std::back_inserter( tctx.pending ) );
 
@@ -60,8 +57,6 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
     // FitnessP fitness (new FitnessMin);
 
     if( periodic ) {
-        tc->load_tasks( test_tasks );
-        tc->compute_hyperperiod( test_tasks );
 
         Simulator<Tree::Tree*> *simulator = new Simulator<Tree::Tree*>( 1, 10, tc, sched, true, false );
         simulator->set_heuristic( tree );
@@ -81,10 +76,17 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
                  tc->create_test_set( test_tasks );
                  tc->compute_hyperperiod( test_tasks );
 
-                 simulator->set_pending( test_tasks );
-                simulator->set_finish_time( tc->get_hyperperiod() );
-                simulator->run();
-                simulator->compute_mean_skip_factor();
+//                 simulator->set_pending( test_tasks );
+//                simulator->set_finish_time( tc->get_hyperperiod() );
+//                simulator->run();
+//                simulator->compute_mean_skip_factor();
+
+                 bwp->set_pending( test_tasks );
+                 bwp->set_heuristic( tree );
+                 bwp->set_finish_time( tc->get_hyperperiod() );
+                 bwp->simulate(1);
+                 qos.push_back( bwp->get_qos() );
+                 wasted.push_back( bwp->get_wasted() / tc->get_hyperperiod() );
 
 //                 rto->set_pending( test_tasks );
 //                 rto->compute_eq_utilization();
@@ -95,8 +97,8 @@ FitnessP TaskEvalOp::evaluate(IndividualP individual)
 //                 rlp->set_heuristic( tree );
 //                 rlp->simulate();
 
-                 qos.push_back( simulator->get_qos() );
-                 wasted.push_back( simulator->get_time_wasted() / simulator->get_finish_time() );
+//                 qos.push_back( simulator->get_qos() );
+//                 wasted.push_back( simulator->get_time_wasted() / simulator->get_finish_time() );
 //                    skip.push_back( simulator->compute_skip_fitness() );
 //                    gini.push_back( simulator->compute_gini_coeff() );
              }
